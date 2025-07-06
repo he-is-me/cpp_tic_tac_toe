@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <cstdlib>
 #include <map>
 #include <ios>
 #include <ostream>
@@ -83,7 +81,7 @@ void displayBoard()
 }
 
 
-void modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
+bool modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
                       int played_row, int played_col, char player_symbol)
 {
 
@@ -94,7 +92,7 @@ void modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_ma
       if (row == played_row && col == played_col){
         if (symbol != ' '){
           cout << "this spot is taken, pick another !" << endl;
-          return;
+          return false;
         }else {
           get<2>(winning_moves_map[key][vec_count]) = player_symbol;
         #ifdef DEBUG
@@ -107,6 +105,11 @@ void modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_ma
     ++vec_count;
     }
   }
+#ifdef DEBUG
+  cout << "MODIFIED VALID MOVES RETURNING TRUE\n\n";
+
+#endif // DEBUG
+  return true;
 }
 
 
@@ -141,7 +144,7 @@ bool checkForWinner(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
   return false;
 }
 
-map<string, vector<tuple<int,int,char>>> validMoves()
+map<string, vector<tuple<int,int,char>>> validMovesMap()
   // key: move name, tuple(row, col , held by? x||o)
 {
   map<string, vector<tuple<int,int,char>>> winning_moves 
@@ -202,6 +205,76 @@ pair<char,char> getPlayerSymbols()
 
 
 
+pair<int,int> getMoves(char player_1, char player_2,
+                       int player_count, char player)
+{
+  pair<int, int> moves{0,0};
+  cout << "Row & Col:\n";
+  int row_move;
+  int col_move;
+  while (!(cin >> row_move >> col_move)){
+     moves = verifyMove(row_move,col_move);
+
+ 
+#ifdef DEBUG
+    cout << "moves verified: " << moves.first << " & " << moves.second;
+    cout << "current player: " << player << " " 
+         << "player_1: " << player_1 << " "
+         << "player_2: " << player_2 << " "
+         << "player_count " << player_count << " "
+         << "row move: " << row_move << " " 
+         << "col_move: "<< col_move << '\n';
+#endif // DEBUG
+
+    if (moves.first == 9 && moves.second == 9){
+      cout << "INVALID MOVE (1-3 only)" << '\n';
+      continue;
+    } 
+  }
+ return {moves.first, moves.second};
+}
+
+      
+
+
+
+
+
+
+bool twoPlayerMode(char player_1, char player_2, int player_count,
+                  map<string, vector<tuple<int,int,char>>>& winning_moves_map)
+{
+  for (char player: {player_1,player_2}){
+    char current_player = player;
+
+    pair<int,int> moves = getMoves(player_1, player_2, player_count, player);
+
+    bool placement = modifyValidMoves(winning_moves_map, moves.first, moves.second, current_player);
+#ifdef DEBUG
+      cout << moves.first << " " << moves.second;
+#endif // DEBUG
+     
+      if (placement){
+      updateScreenBoard(screen_board, moves.first,moves.second, current_player);
+      }else {
+        pair<int,int> moves = getMoves(player_1, player_2, player_count, player);
+
+      continue;
+      }
+
+      if (checkForWinner(winning_moves_map, moves.first, moves.second, current_player)){
+        return false;
+      }else{
+        continue;
+      }
+
+    }
+
+ return true;
+}
+
+
+
 int main () 
 {
   intro();
@@ -218,54 +291,14 @@ int main ()
   char player_2 = player_symbols.second;
 
   cout << player_count << " Player game it is then!\n";
-  auto winning_moves_map{validMoves()};
+  auto winning_moves_map{validMovesMap()};
   displayBoard();
-  int row_move;
-  int col_move;
 
-  while (game_progress != 9){
+  bool game_over{true};
+  while (game_over){
     if (player_count == 2){
-      for (char player: {player_1,player_2}){
-        char current_player = player;
-
-        if (cin >> row_move >> col_move){
-          pair<int, int> moves{verifyMove(row_move,col_move)};
-
-#ifdef DEBUG
-          cout << "current player: " << player << " " 
-               << "player_1: " << player_1 << " "
-               << "player_2: " << player_2 << " "
-               << "player_count " << player_count << " "
-               << "row move: " << row_move << " " 
-               << "col_move: "<< col_move << '\n';
-#endif // DEBUG
-
-        if (moves.first == 9 && moves.second == 9){
-          cout << "INVALID MOVE (1-3 only)" << '\n';
-          continue;
-        }
-
-          modifyValidMoves(winning_moves_map, moves.first, moves.second, current_player);
-          cout << moves.first << " " << moves.second;
-          updateScreenBoard(screen_board, moves.first,moves.second, current_player);
-
-          if (checkForWinner(winning_moves_map, moves.first, moves.second, current_player)){
-            return 0;
-          }else{
-            ++game_progress;
-#ifdef DEBUG
-            cout << "GAME PROGRESS: " << game_progress << '\n';
-#endif // DEBUG
-            continue;
-          }
-
-          }else {
-            cout << "THE FUCK ?!?" << '\n';
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
-            continue;
-                }
-        }
+      game_over = twoPlayerMode(player_1, player_2, player_count, winning_moves_map);
+                                     
     }
   }
   cout << "Game Over !" << endl;
