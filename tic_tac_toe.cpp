@@ -64,7 +64,6 @@ map<int, vector<char>> updateScreenBoard(map<int, vector<char>>& updated_screen_
       cout << row << "";
     }
   }
-    cout << endl;
 
   return screen_board;
 }
@@ -92,6 +91,10 @@ bool modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_ma
       if (row == played_row && col == played_col){
         if (symbol != ' '){
           cout << "this spot is taken, pick another !" << endl;
+#ifdef DEBUG
+          cout << "CURRENT SYMBOL IN " << key << "("<< played_col << "," << played_col
+               << "): [" << symbol << "]" << endl;
+#endif // DEBUG
           return false;
         }else {
           get<2>(winning_moves_map[key][vec_count]) = player_symbol;
@@ -209,9 +212,10 @@ pair<int,int> getMoves(char player_1, char player_2,
                        int player_count, char player)
 {
   pair<int, int> moves{0,0};
-  cout << "Row & Col:\n";
-  int row_move;
-  int col_move;
+  // cout << "Row & Col:\n";
+  int row_move{};
+  int col_move{};
+
   while (!(cin >> row_move >> col_move)){
      moves = verifyMove(row_move,col_move);
 
