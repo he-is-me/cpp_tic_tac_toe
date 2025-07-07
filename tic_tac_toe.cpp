@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <map>
 #include <ios>
 #include <ostream>
@@ -8,7 +9,7 @@
 #include <vector>
 using namespace std;
 
-#define DEBUG
+// #define DEBUG
 // #define DEEP_DEBUG
 map<int, vector<char>> screen_board {
 
@@ -57,12 +58,13 @@ void intro()
 map<int, vector<char>> updateScreenBoard(map<int, vector<char>>& updated_screen_board,
                                       int played_row, int played_col, char player_symbol)
 {
+  system("clear");
   // This is printing out the gameboard to the screen 
   screen_board[played_row][played_col] = player_symbol;
   for (const auto& [rowId, rows]: screen_board ){
     cout << '\n';
     for (const auto& row: rows){
-      cout << row << "";
+      cout << row; 
     }
   }
   return screen_board;
@@ -73,11 +75,13 @@ void displayBoard()
   for (const auto& [rowId, rows]: screen_board ){
     cout << '\n';
     for (const auto& row: rows){
-      cout << row << "";
+      cout << row;
     }
   }
     cout << endl;
 }
+
+
 
 
 bool modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
@@ -96,7 +100,6 @@ bool modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_ma
 #endif // DEBUG
           return false;
         }else {
-          cout << "!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!\n!!!!!!!!!!!!!!!!!!!!!!!!\n";
           get<2>(winning_moves_map[key][vec_count]) = player_symbol;
 
         #ifdef DEBUG
@@ -110,10 +113,6 @@ bool modifyValidMoves(map<string, vector<tuple<int,int,char>>>& winning_moves_ma
     ++vec_count;
     }
   }
-#ifdef DEBUG
-  cout << "MODIFIED VALID MOVES RETURNING TRUE\n\n";
-
-#endif // DEBUG
   return true;
 }
 
@@ -136,11 +135,9 @@ bool checkForWinner(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
             && pos_3 == player_symbol
             )
         {
-
-          cout << "key: " << key << '\n' << "--------\n"
-               << player_symbol << " WINS !!" << endl;
+          cout << "\n\n";
+          cout << player_symbol << " WINS !!" << endl;
           return true;
-
         }else {
         break;
         }
@@ -148,6 +145,9 @@ bool checkForWinner(map<string, vector<tuple<int,int,char>>>& winning_moves_map,
   }
   return false;
 }
+
+
+
 
 map<string, vector<tuple<int,int,char>>> validMovesMap()
   // key: move name, tuple(row, col , held by? x||o)
@@ -230,13 +230,12 @@ pair<int,int> getMoves(char player_1, char player_2,
     }
     cout << "Row: " << row_move << " Col: ";
     cin >> col_move;
-    if (cin.fail()){
-      cout << '\n' << "INVALID COLUMN #" << endl;
+    if (cin.fail()){ cout << '\n' << "INVALID COLUMN #" << endl;
       cin.clear();
       cin.ignore(numeric_limits<streamsize>::max(), '\n');
       continue;
   }
-      cout << "Row: " << row_move << " Col: " << col_move;
+      cout << "Row: " << row_move << " Col: " << col_move << endl;
   
 #ifdef DEBUG
     cout << "adjusted verified moves: " << moves.first << " & " << moves.second << '\n'
@@ -262,10 +261,6 @@ pair<int,int> getMoves(char player_1, char player_2,
       
 
 
-
-
-
-
 bool twoPlayerMode(char player_1, char player_2, int player_count,
                   map<string, vector<tuple<int,int,char>>>& winning_moves_map)
 {
@@ -283,15 +278,11 @@ bool twoPlayerMode(char player_1, char player_2, int player_count,
       updateScreenBoard(screen_board, moves.first,moves.second, current_player);
       }else {
         while (true){ 
-          cout << "pre-check PLACEMENT BOOL: "<< placement << endl;
-    
           // keep looping until user gives a move thats not taken
           // placement checks that the move the player entered isnt
           // already occupied
         pair<int,int> moves = getMoves(player_1, player_2, player_count, player);
-        cout << "DEBUGGG: " << moves.first << " " << moves.second << "current_player: !!!!!" << current_player <<  endl;
         placement = modifyValidMoves(winning_moves_map, moves.first, moves.second, current_player);
-        cout << "post-check PLACEMENT BOOL: " << placement << endl;
         //after we finally get valid placement update the screen with it
         if (placement){
         updateScreenBoard(screen_board, moves.first,moves.second, current_player);
@@ -301,6 +292,7 @@ bool twoPlayerMode(char player_1, char player_2, int player_count,
           }
         }
       }
+      //if their is a 3 in a row line return false stopping the game loop
     if (checkForWinner(winning_moves_map, moves.first, moves.second, current_player)){
       return false;
     }
@@ -327,6 +319,7 @@ int main ()
   char player_2 = player_symbols.second;
 
   cout << player_count << " Player game it is then!\n";
+  cout << player_1 << " Make your move !" << endl; 
   auto winning_moves_map{validMovesMap()};
   displayBoard();
 
@@ -334,7 +327,6 @@ int main ()
   while (game_over){
     if (player_count == 2){
       game_over = twoPlayerMode(player_1, player_2, player_count, winning_moves_map);
-                                     
     }
   }
   cout << "Game Over !" << endl;
